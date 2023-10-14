@@ -1,0 +1,41 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/hci.h>
+
+#if 0
+Service UUID: 0000110A-0000-1000-8000-00805F9B34FB becomes 0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x80, 0x00, 0x10, 0x00, 0x00, 0x0a, 0x11, 0x00, 0x00, 0x00, 0x00.
+
+Characteristic UUID: 0000110B-0000-1000-8000-00805F9B34FB becomes 0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x80, 0x00, 0x10, 0x00, 0x00, 0x0b, 0x11, 0x00, 0x00, 0x00, 0x00.
+#endif
+
+int main() {
+    int dev_id = hci_get_route(NULL);
+    int sock = hci_open_dev(dev_id);
+
+    if (dev_id < 0 || sock < 0) {
+        perror("Error opening socket");
+        return 1;
+    }
+
+    // Define your own advertising data, including UUIDs
+    uint8_t adv_data[] = {
+        0x02, 0x01, 0x06,         // Flags
+        0x0A, 0x09, 'M', 'y', 'S', 'e', 'r', 'v', 'i', 'c', 'e', // Complete local name
+	0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x80, 0x00, 0x10, 0x00, 0x00, 0x0a, 0x11, 0x00, 0x00, 0x00, 0x00 // Service
+	//0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x80, 0x00, 0x10, 0x00, 0x00, 0x0b, 0x11, 0x00, 0x00, 0x00, 0x00 // Characteristic
+    };
+
+    if (hci_le_set_advertising_data(sock, sizeof(adv_data), adv_data) < 0) {
+        perror("Error setting advertising data");
+        return 1;
+    }
+
+    printf("Advertising data set successfully\n");
+
+    close(sock);
+    return 0;
+}
+
