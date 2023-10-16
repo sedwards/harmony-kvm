@@ -1,0 +1,73 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/hci.h>
+#include <bluetooth/hci_lib.h>
+#include <uuid/uuid.h>
+
+int main(int argc, char** argv) {
+    int dev_id = hci_get_route(NULL);
+    int sock;
+    le_set_advertising_parameters_cp adv_params;
+    le_set_advertising_data_cp adv_data;
+    le_set_advertise_enable_cp advertise_enable;
+
+    sock = hci_open_dev(dev_id);
+    if (dev_id < 0 || sock < 0) {
+        perror("Error opening socket");
+        exit(1);
+    }
+
+    // Set advertising parameters
+    memset(&adv_params, 0, sizeof(adv_params));
+    adv_params.min_interval = htobs(0x20);
+    adv_params.max_interval = htobs(0x40);
+    adv_params.chan_map = 7;
+    adv_params.advtype = 0x00;  // Connectable undirected advertising
+
+    if (hci_le_set_advertising_parameters(sock, &adv_params) < 0) {
+        perror("Set advertising parameters failed");
+        close(sock);
+        exit(1);
+    }
+
+    // Set advertising data
+    uint8_t adv_data_len = 12;
+    uint8_t adv_data_data[] = {
+        0x02, 0x01, 0x06,              // Flags: LE General Discoverable
+        0x03, 0x03, 0x0A, 0x18,       // Complete list of 16-bit Service Class UUIDs (Generic Attribute Profile)
+        0x07, 0x16, 'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd'
+    };
+
+    memset(&adv_data, 0, sizeof(adv_data));
+    adv_data.data = adv_data_data;
+    adv_data.length = adv_data_len;
+
+    if (hci_le_set_advertising_data(sock, &adv_data) < 0) {
+        perror("Set advertising data failed");
+        close(sock);
+        exit(1);
+    }
+
+    // Enable advertising
+    memset(&advertise_enable, 0, sizeof(advertise_enable));
+    advertise_enable.adv = 0x01;
+
+    if (hci_le_set_advertise_enable(sock, &advertise_enable, 10000) < 0) {
+        perror("Enable advertising failed");
+        close(sock);
+        exit(1);
+    }
+
+    printf("Advertising started. Press Ctrl+C to exit.\n");
+    while (1) {
+        sleep(1);
+    }
+
+    close(sock);
+    return 0;
+}
+

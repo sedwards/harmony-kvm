@@ -11,16 +11,14 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-// Connecting too
-// 3C:22:FB:9A:01:4F
-
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <device_address>\n", argv[0]);
-        return 1;
-    }
+   // if (argc != 2) {
+  //      fprintf(stderr, "Usage: %s <device_address>\n", argv[0]);
+  //      return 1;
+  ///  }
 
-    const char *device_address = argv[1];
+    //const char *device_address = argv[1];
+    const char *device_address = "3C:22:FB:9A:01:4F";
     bdaddr_t bdaddr;
     str2ba(device_address, &bdaddr);
 

@@ -1,0 +1,44 @@
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/l2cap.h>
+
+int main() {
+    int sock, status;
+    struct sockaddr_l2 addr = { 0 };
+    char dest[18] = "3C:22:FB:9A:01:4F"; // Replace with the MAC address of your macOS device
+    char buf[256] = "Hello, L2CAP!";
+    
+    // Create L2CAP socket
+    sock = socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
+    if (sock < 0) {
+        perror("socket");
+        return -1;
+    }
+    
+    addr.l2_family = AF_BLUETOOTH;
+    addr.l2_psm = htobs(0x1001); // Replace with the PSM of your macOS service
+    str2ba(dest, &addr.l2_bdaddr);
+    
+    // Connect to the remote L2CAP service
+    status = connect(sock, (struct sockaddr*)&addr, sizeof(addr));
+    if (status < 0) {
+        perror("connect");
+        close(sock);
+        return -1;
+    }
+    
+    // Send data
+    status = write(sock, buf, sizeof(buf));
+    if (status < 0) {
+        perror("write");
+    }
+    
+    // Close the socket
+    close(sock);
+    
+    return 0;
+}
+
