@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/rfcomm.h>
+
+int main(int argc, char **argv) {
+    struct sockaddr_rc loc_addr = { 0 };
+    struct sockaddr_rc rem_addr = { 0 };
+    int s, status;
+    char dest[18] = "3C:22:FB:9A:01:4F";  // Replace with your server's Bluetooth address
+
+    // Allocate a socket
+    s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
+
+    // Set up the local Bluetooth adapter
+    loc_addr.rc_family = AF_BLUETOOTH;
+    loc_addr.rc_bdaddr = *BDADDR_ANY;
+    loc_addr.rc_channel = 1;  // Replace with the RFCOMM channel you want to connect to
+
+    // Bind the socket
+    bind(s, (struct sockaddr *)&loc_addr, sizeof(loc_addr));
+
+    // Set up the remote Bluetooth device
+    rem_addr.rc_family = AF_BLUETOOTH;
+    str2ba(dest, &rem_addr.rc_bdaddr);
+    rem_addr.rc_channel = 1;  // Replace with the RFCOMM channel on the remote server
+
+    // Connect to the remote device
+    status = connect(s, (struct sockaddr *)&rem_addr, sizeof(rem_addr));
+
+    if (status == 0) {
+        // Connection established
+        printf("Connected to remote device.\n");
+
+        // Send data (replace with your own data)
+        char message[] = "Hello, Bluetooth!";
+        send(s, message, strlen(message), 0);
+
+        // Close the socket when done
+        close(s);
+    } else {
+        // Connection failed
+        perror("Error connecting");
+    }
+
+    return 0;
+}
+
