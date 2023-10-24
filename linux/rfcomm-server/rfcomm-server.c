@@ -7,9 +7,12 @@
 #include <pthread.h>
 #include <string.h>
 #include <signal.h>
+#include <termios.h>
+#include <fcntl.h>
 
 int client; // Shared client socket
 pthread_mutex_t client_mutex;
+int serial_fd;
 
 // Function to send a message to the client
 void sendHelloMessage() {
@@ -30,23 +33,48 @@ void *sendHelloThread(void *arg) {
 
 // Thread function to handle incoming client messages
 void *clientThread(void *arg) {
-    char buf[1024] = { 0 };
-    int bytes_read;
+    char client_buf[1024] = { 0 };
+    char serial_buf[1024] = { 0 };
+    int client_bytes_read;
+    int serial_bytes_read;
+
+    // Open the virtual serial port (replace '/dev/pts/1' with the correct port)
+    serial_fd = open("/dev/pts/4", O_RDWR);
+    if (serial_fd < 0) {
+        perror("open");
+        pthread_exit(NULL);
+    }
 
     while (1) {
+	/* Try to read traffic from the client */
         pthread_mutex_lock(&client_mutex);
-        bytes_read = read(client, buf, sizeof(buf));
+        client_bytes_read = read(client, client_buf, sizeof(client_buf));
         pthread_mutex_unlock(&client_mutex);
 
-        if (bytes_read > 0) {
-            printf("received [%s]\n", buf);
+        if (client_bytes_read > 0) {
+            printf("received [%s]\n", client_buf);
         }
 
-	for (ssize_t i = 0; i < bytes_read; i++) {
-          printf("%02X ", buf[i]);
+	for (ssize_t i = 0; i < client_bytes_read; i++) {
+          printf("%02X ", client_buf[i]);
         }
 
+	/* Try reading from the serial port */
+        serial_bytes_read = read(serial_fd, serial_buf, sizeof(serial_buf));
+
+        if (serial_bytes_read > 0) {
+            printf("Received from serial port: %s\n", serial_buf);
+
+            /* Send the data to the client */
+            pthread_mutex_lock(&client_mutex);
+
+	    /* Write the data received from the serial port to the client */
+            write(client, serial_buf, serial_bytes_read);
+            pthread_mutex_unlock(&client_mutex);
+        }
     }
+    close(serial_fd);
+
     return NULL;
 }
 
