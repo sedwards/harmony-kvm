@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
   ///  }
 
     //const char *device_address = argv[1];
-    const char *device_address = "3C:22:FB:9A:01:4F";
+    const char *device_address = "b0-35-9f-0d-90-bb";
     bdaddr_t bdaddr;
     str2ba(device_address, &bdaddr);
 
