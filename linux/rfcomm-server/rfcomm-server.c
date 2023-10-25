@@ -39,7 +39,7 @@ void *clientThread(void *arg) {
     int serial_bytes_read;
 
     // Open the virtual serial port (replace '/dev/pts/1' with the correct port)
-    serial_fd = open("/dev/pts/4", O_RDWR);
+    serial_fd = open("/dev/pts/9", O_RDWR);
     if (serial_fd < 0) {
         perror("open");
         pthread_exit(NULL);
@@ -85,7 +85,8 @@ int main(int argc, char **argv) {
     socklen_t opt = sizeof(rem_addr);
     pthread_t tid_send, tid_client;
 
-    char mac_addr[] = "b0-35-9f-0d-90-bb";
+    //char mac_addr[] = "b0-35-9f-0d-90-bb";
+    char mac_addr[] = "B0-35-9F-0D-90-BB";
 
     pthread_mutex_init(&client_mutex, NULL);
 
